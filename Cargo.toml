@@ -1,7 +1,14 @@
 [package]
-name = "maia"
+name = "mica"
 version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-sdl2 = { version="0.38.0", features=["image"] }
+sdl2 = { version="0.38.0", features=["image", "ttf"] }
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = 'abort'
+strip = true
