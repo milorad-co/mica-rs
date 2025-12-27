@@ -1,14 +1,34 @@
 [package]
 name = "mica"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sdl2 = { version="0.38.0", features=["image", "ttf"] }
+macroquad = "0.4.14"
 
-[profile.release]
-opt-level = 'z'
-lto = true
+# build with -> cargo build --profile release-performance
+[profile.release-performance]
+inherits = "release"
+# Maximum Link Time Optimization for best performance
+lto = "fat"
+# Single codegen unit maximizes optimization opportunities
 codegen-units = 1
-panic = 'abort'
-strip = true
+# Keep debug symbols for profiling capabilities
+strip = "none"
+# Use unwinding for better error handling without sacrificing much performance
+panic = "unwind"
+# Disable incremental compilation for maximum optimization
+incremental = false
+# Maximum optimization for speed
+opt-level = 3
+# Include minimal debug info for better profiling without much size impact
+debug = 1
+# Enable more aggressive optimizations
+overflow-checks = false
+
+# Optimize dependencies with the same settings
+[profile.release-performance.package."*"]
+opt-level = 3
+codegen-units = 1
+debug = 1
+# LTO cannot be specified in package profile
