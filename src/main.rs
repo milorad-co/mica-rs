@@ -34,9 +34,10 @@ async fn main() {
     let mut sdify: f32;
     let mut stepy: f32;
     let mut stepx: f32;
+    let mut step: i32;
     let mut x: f32;
     let mut y: f32;
-    let mut size: i128  = 42; //life the universe and everything
+    let mut size: i32  = 42; //life the universe and everything
     let (mut mouse_wheel_x, mut mouse_wheel_y) = mouse_wheel();
     let mut i: i128;
     let mut i2: i64;
@@ -60,22 +61,23 @@ async fn main() {
         (mousex, mousey) = mouse_position();//get mouse position
         //clears and draws menu
         clear_background(WHITE);
-        draw_texture(&logo, 150., 0., WHITE);
-        draw_texture(&imageeditor, 250., 300., WHITE);
+        draw_texture(&logo, (screen_width()/2. - 250.), 0., WHITE);
+        draw_texture(&imageeditor, (screen_width()/2. - 150.), (screen_height()/2.), WHITE);
 
         //liscense button
-        draw_rectangle(10., 581., 435., 13., GRAY);
-        draw_rectangle(10., 581., 434., 12., LIGHTGRAY);
-        draw_text("By using this software you agree to the terms of this liscense", 10.0, 590.0, 16.0, BLACK);
+        draw_rectangle(10., screen_height() - 19., 435., 13., GRAY);
+        draw_rectangle(10., screen_height() - 19., 434., 12., LIGHTGRAY);
+        draw_text("By using this software you agree to the terms of this liscense", 10.0, screen_height() - 10.0, 16.0, BLACK);
+
 
         //checks if you pressed image editor
-        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 250. && mousex <= 550.) && (mousey >= 300. && mousey <= 400.){
+        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= (screen_width()/2. - 150.) && mousex <= (screen_width()/2. + 150.)) && (mousey >= (screen_height()/2.) && mousey <= (screen_height()/2. + 100.)){
              println!("poraro");
             //init texture
             let texture = Texture2D::empty();
             //image shit for drawing
-            let w = (screen_width() + 100.) as usize;
-            let h = (screen_height() + 100.) as usize;
+            let w = screen_width() as usize;
+            let h = screen_height() as usize;
             let mut image = Image::gen_image_color(w as u16, h as u16, WHITE);
             let image2 = Texture2D::from_image(&image);
             loop{
@@ -89,29 +91,35 @@ async fn main() {
 
                 (mouse_wheel_x, mouse_wheel_y) = mouse_wheel();
                 println!("{} {}",mouse_wheel_x, mouse_wheel_y);
-                if(mouse_wheel_y == -1.){size += -1;}
-                if(mouse_wheel_y == 1.){size += 1;}
-
+                if mouse_wheel_y == -1. {size += -1;}
+                if mouse_wheel_y == 1. {size += 1;}
 
                 //draw code
-                if(is_mouse_button_down(MouseButton::Left) && mousex >=  33. && mousx >=  33. && state == 1){
+                if is_mouse_button_down(MouseButton::Left) && state == 1 {
                     println!("down and in range!");
                     //line drawing code (sponsored by milorad)
-                    image.set_pixel((mousex) as u32, (mousey) as u32, colour,);
-                    x = mousx;
-                    y = mousy;
+
+                    step = ((mousex - mousx).abs()) as i32;
+                   if(step >= ((mousey - mousy).abs()) as i32){
+                }else{
+                    step = ((mousey - mousy).abs()) as i32;
+                }
+                    //centres the draw square
+                    x = mousx - (size / 2) as f32;
+                    y = mousy - (size / 2) as f32;
                     sdifx = mousex - mousx;
                     sdify = mousey - mousy;
-                    stepx = sdifx /500.;
-                    stepy = sdify /500.;
-                    for _ in 0..500{
+                    stepx = sdifx /(step) as f32;
+                    stepy = sdify /(step) as f32;
+                    for _ in 0..step{
 
                         x += stepx;
                         y += stepy;
                         for i2 in 0..size{
                             for i in 0..size{
-                            image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, colour,);
+                                if(i + (x) as i32 >= w.try_into().unwrap()){
 
+                                }else{if(i2 + (y) as i32 >= h.try_into().unwrap()){}else{image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, colour,);}}
                             }
                         }
                     }
@@ -120,12 +128,12 @@ async fn main() {
 
 
                 //erase code
-                if(is_mouse_button_down(MouseButton::Left) && mousex >=  33. && mousx >=  33. && state == 2){
+                if is_mouse_button_down(MouseButton::Left) && mousex >=  33. && mousx >=  33. && state == 2 {
                     println!("down and in range!");
                     //line drawing code (sponsored by milorad)
                     image.set_pixel((mousex) as u32, (mousey) as u32, colour,);
-                    x = mousx;
-                    y = mousy;
+                    x = mousx - (size / 2) as f32;
+                    y = mousy - (size / 2) as f32;
                     sdifx = mousex - mousx;
                     sdify = mousey - mousy;
                     stepx = sdifx /500.;
@@ -148,9 +156,11 @@ async fn main() {
                 image2.update(&image);
                 draw_texture(&image2, 0., 0., WHITE);
                 //draw the menu
+                 draw_rectangle(0., 0., 32., 1900., WHITE);
                 draw_rectangle(32., 0., 2., 1900., GRAY);
-                draw_text("Size:", 0.0, 574.0, 16.0, BLACK);
-                draw_text(&size.to_string(), 10.0, 590.0, 16.0, BLACK);
+
+                draw_text("Size:", 0.0, (screen_height() - 26.), 16.0, BLACK);
+                draw_text(&size.to_string(), 10.0, (screen_height() - 10.), 16.0, BLACK);
                 draw_texture(&paint, 0., 0., WHITE);
                 draw_texture(&rubber, 0., 32., WHITE);
                 draw_texture(&colsel, 0., 64., WHITE);
@@ -160,7 +170,7 @@ async fn main() {
                 if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 0. && mousex <= 32.) && (mousey >= 64. && mousey <= 96.){
                     println!("you pressed it!"); state = 1;
                     colmenu = 1;
-                    while(colmenu == 1){
+                    while colmenu == 1 {
                         (mousex, mousey) = mouse_position();
                         clear_background(WHITE);
                         draw_text("Colour menu and stuff  BACK", 1.0, 16.0, 16.0, BLACK);
@@ -201,10 +211,10 @@ async fn main() {
                             cr += 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cr);
-                            if(cr >= 1.0){
-                                cr = 0.99;
+                            if cr >= 1.0 {
+                                cr = 1.;
                             }
-                            if(cr <= -0.001){
+                            if cr <= -0.001 {
                                 cr = 0.0;
                             }
                         }
@@ -213,10 +223,10 @@ async fn main() {
                             cr -= 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cr);
-                            if(cr >= 1.0){
-                                cr = 0.99;
+                            if cr >= 1.0 {
+                                cr = 1.;
                             }
-                            if(cr <= -0.001){
+                            if cr <= -0.001 {
                                 cr = 0.0;
                             }
                         }
@@ -227,10 +237,10 @@ async fn main() {
                             cb += 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cb);
-                            if(cb>= 1.0){
-                                cb = 0.99;
+                            if cb>= 1. {
+                                cb = 1.;
                             }
-                            if(cb <= -0.001){
+                            if cb <= -0.001 {
                                 cb = 0.0;
                             }
                         }
@@ -239,10 +249,10 @@ async fn main() {
                             cb -= 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cb);
-                            if(cb >= 1.0){
-                                cb = 0.99;
+                            if cb >= 1.0 {
+                                cb = 1.;
                             }
-                            if(cb <= -0.001){
+                            if cb <= -0.001 {
                                 cb = 0.0;
                             }
                         }
@@ -254,10 +264,10 @@ async fn main() {
                             ca += 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", ca);
-                            if(ca>= 1.0){
-                                ca = 0.99;
+                            if ca>= 1.0 {
+                                ca = 1.;
                             }
-                            if(ca <= -0.001){
+                            if ca <= -0.001 {
                                 ca = 0.0;
                             }
                         }
@@ -266,10 +276,10 @@ async fn main() {
                             ca -= 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cb);
-                            if(ca >= 1.0){
-                                ca = 0.99;
+                            if ca >= 1.0 {
+                                ca = 1.;
                             }
-                            if(ca <= -0.001){
+                            if ca <= -0.001 {
                                 ca = 0.0;
                             }
                         }
@@ -282,10 +292,10 @@ async fn main() {
                             cg += 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cg);
-                            if(cg>= 1.0){
-                                cg = 0.99;
+                            if cg>= 1.0 {
+                                cg = 1.;
                             }
-                            if(cg <= -0.001){
+                            if cg <= -0.001 {
                                 cg = 0.0;
                             }
                         }
@@ -294,10 +304,10 @@ async fn main() {
                             cg -= 0.01;
                             colour = Color::new(cr, cg, cb, ca);
                             println!("{}", cg);
-                            if(cg >= 1.0){
-                                cg = 0.99;
+                            if cg >= 1.0 {
+                                cg = 1.;
                             }
-                            if(cg <= -0.001){
+                            if cg <= -0.001 {
                                 cg = 0.0;
                             }
                         }
@@ -321,7 +331,7 @@ async fn main() {
 
 
         //liscense button
-        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 10. && mousex <= 507.) && (mousey >= 570. && mousey <= 600.){
+        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 10. && mousex <= 507.) && (mousey >= screen_height() -30. && mousey <= screen_height()){
             println!("UWU~");//epic debug text
             liscense = 1; //sets to check if you are still looking
             while(liscense == 1){
