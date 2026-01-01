@@ -1,7 +1,13 @@
 use macroquad::prelude::*;
 use std::{time};
 use std::thread::sleep;
-
+use macroquad::{
+    prelude::*,
+    ui::{hash, root_ui, widgets::InputText},
+    window::request_new_screen_size,
+};
+const EDITOR_TOP_MARGIN: f32 = 10.0;
+const EDITOR_HEIGHT: f32 = 40.0;
 
 #[macroquad::main("M.I.C.A.")]
 
@@ -51,6 +57,10 @@ async fn main() {
     let mut ca = 1.0;
 
 
+    let mut xsel = 0;
+    let mut ysel = 0;
+    let mut datax = String::new();
+    let mut datay = String::new();
 (mousex, mousey) = mouse_position();
 
     //loop (woah no kidding)
@@ -72,12 +82,103 @@ async fn main() {
 
         //checks if you pressed image editor
         if is_mouse_button_pressed(MouseButton::Left) && (mousex >= (screen_width()/2. - 150.) && mousex <= (screen_width()/2. + 150.)) && (mousey >= (screen_height()/2.) && mousey <= (screen_height()/2. + 100.)){
+
+            xsel = 1;
+            while(xsel == 1){
+                (mousex, mousey) = mouse_position();//get mouse position
+                clear_background(WHITE);
+                draw_text("Input X size (draw area width) leave blank for window sized canvas", 10.0, 60.0, 16.0, BLACK);
+                draw_rectangle(105., 19., 21., 13., GRAY);
+                draw_rectangle(105., 19., 20., 12., LIGHTGRAY);
+                draw_text("OK", 105.0, 30.0, 16.0, BLACK);
+                //text input
+                let window_id = hash!();
+                root_ui().window(
+                    window_id,
+                    vec2(0.0, EDITOR_TOP_MARGIN),
+                                 vec2(100.0, EDITOR_HEIGHT),
+                                 |ui| {
+                                     let input_text_id = hash!();
+                                     InputText::new(input_text_id)
+                                     .label("")
+                                     .size(vec2(96.0, EDITOR_HEIGHT - 4.0))
+                                     .ui(ui, &mut datax);
+
+                                 },
+
+                );
+
+                if is_key_pressed(KeyCode::Enter){
+                    println!("ok you pressed it!");
+                    xsel = 0;
+                    ysel = 1;
+                    if(datax == ""){
+                        ysel = 0;
+                    }
+                }
+                if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 105. && mousex <= 126.) && (mousey >= 19. && mousey <= 32.){
+                    println!("ok you pressed it!");
+                    xsel = 0;
+                    ysel = 1;
+                    if(datax == ""){
+                        ysel = 0;
+                    }
+                }
+                next_frame().await; //RENDER IT!
+            }
+            while(ysel == 1){
+                (mousex, mousey) = mouse_position();//get mouse position
+                clear_background(WHITE);
+                draw_text("Input Y size (draw area width)", 10.0, 60.0, 16.0, BLACK);
+                draw_rectangle(105., 19., 21., 13., GRAY);
+                draw_rectangle(105., 19., 20., 12., LIGHTGRAY);
+                draw_text("OK", 105.0, 30.0, 16.0, BLACK);
+                //text input
+                let window_id = hash!();
+                root_ui().window(
+                    window_id,
+                    vec2(0.0, EDITOR_TOP_MARGIN),
+                                 vec2(100.0, EDITOR_HEIGHT),
+                                 |ui| {
+                                     let input_text_id = hash!();
+                                     InputText::new(input_text_id)
+                                     .label("")
+                                     .size(vec2(96.0, EDITOR_HEIGHT - 4.0))
+                                     .ui(ui, &mut datay);
+
+                                 },
+
+                );
+
+                if is_key_pressed(KeyCode::Enter){
+                    println!("ok you pressed it!");
+                    xsel = 0;
+                    ysel = 0;
+                }
+                if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 105. && mousex <= 126.) && (mousey >= 19. && mousey <= 32.){
+                    println!("ok you pressed it!");
+                    xsel = 0;
+                    ysel = 0;
+                }
+                next_frame().await; //RENDER IT!
+            }
+
+
              println!("poraro");
-            //init texture
+            //init texture|
             let texture = Texture2D::empty();
             //image shit for drawing
-            let w = screen_width() as usize;
-            let h = screen_height() as usize;
+            let mut w = 5 as usize;
+            let mut h = 5 as usize;
+            if(datax == ""){
+                h = screen_height() as usize;
+                w = screen_width() as usize;
+            }else{
+            let wint: f32 = datax.parse().unwrap();
+            let hint: f32 = datay.parse().unwrap();
+             w = wint as usize;
+             h = hint as usize;
+            }
             let mut image = Image::gen_image_color(w as u16, h as u16, WHITE);
             let image2 = Texture2D::from_image(&image);
             loop{
@@ -105,7 +206,7 @@ async fn main() {
                     step = ((mousey - mousy).abs()) as i32;
                 }
                     //centres the draw square
-                    x = mousx - (size / 2) as f32;
+                    x = mousx - ((size / 2) + 32) as f32;
                     y = mousy - (size / 2) as f32;
                     sdifx = mousex - mousx;
                     sdify = mousey - mousy;
@@ -118,34 +219,46 @@ async fn main() {
                         for i2 in 0..size{
                             for i in 0..size{
                                 if(i + (x) as i32 >= w.try_into().unwrap()){
+                                }else{
+                                    if(i2 + (y) as i32 >= h.try_into().unwrap()){
+                                    }else{
 
-                                }else{if(i2 + (y) as i32 >= h.try_into().unwrap()){}else{image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, colour,);}}
+                                        image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, colour,);}}
                             }
                         }
                     }
 
                 }
 
-
                 //erase code
-                if is_mouse_button_down(MouseButton::Left) && mousex >=  33. && mousx >=  33. && state == 2 {
+                if is_mouse_button_down(MouseButton::Left) && state == 2 {
                     println!("down and in range!");
                     //line drawing code (sponsored by milorad)
-                    image.set_pixel((mousex) as u32, (mousey) as u32, colour,);
-                    x = mousx - (size / 2) as f32;
+
+                    step = ((mousex - mousx).abs()) as i32;
+                    if(step >= ((mousey - mousy).abs()) as i32){
+                    }else{
+                        step = ((mousey - mousy).abs()) as i32;
+                    }
+                    //centres the draw square
+                    x = mousx - ((size / 2) + 32) as f32;
                     y = mousy - (size / 2) as f32;
                     sdifx = mousex - mousx;
                     sdify = mousey - mousy;
-                    stepx = sdifx /500.;
-                    stepy = sdify /500.;
-                    for _ in 0..500{
+                    stepx = sdifx /(step) as f32;
+                    stepy = sdify /(step) as f32;
+                    for _ in 0..step{
 
                         x += stepx;
                         y += stepy;
                         for i2 in 0..size{
                             for i in 0..size{
-                                image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, erase,);
+                                if(i + (x) as i32 >= w.try_into().unwrap()){
+                                }else{
+                                    if(i2 + (y) as i32 >= h.try_into().unwrap()){
+                                    }else{
 
+                                        image.set_pixel((x + (i) as f32) as u32, (y + (i2) as f32) as u32, erase,);}}
                             }
                         }
                     }
@@ -154,7 +267,7 @@ async fn main() {
 
                 //update image buffer
                 image2.update(&image);
-                draw_texture(&image2, 0., 0., WHITE);
+                draw_texture(&image2, 32., 0., WHITE);
                 //draw the menu
                  draw_rectangle(0., 0., 32., 1900., WHITE);
                 draw_rectangle(32., 0., 2., 1900., GRAY);
