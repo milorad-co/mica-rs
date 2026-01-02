@@ -27,6 +27,7 @@ async fn main() {
     let trans: Texture2D = load_texture("mica_assets/image/trans.png").await.unwrap();
     let down: Texture2D = load_texture("mica_assets/image/down.png").await.unwrap();
     let plus: Texture2D = load_texture("mica_assets/image/plus.png").await.unwrap();
+    let save: Texture2D = load_texture("mica_assets/image/save.png").await.unwrap();
     //input variables
     let mut mousex: f32;
     let mut mousey: f32;
@@ -35,6 +36,7 @@ async fn main() {
     let mut mousy: f32;
     let mut liscense = 0; //are you looking at that GNU gpl v3 again?
     let mut colmenu = 0; //colour menu
+    let mut credit = 0; //credit menu
     //line drawing stuff
     let mut sdifx: f32;
     let mut sdify: f32;
@@ -49,6 +51,7 @@ async fn main() {
     let mut i2: i64;
     //colour stuff
     let mut colour = Color::new(0.50, 0.5, 0.5, 1.00);
+    let mut flipcol = Color::new(0.50, 0.5, 0.5, 1.00);
     let erase = Color::new(0.00, 0.0, 0.0, 0.00);
     let mut state = 0;
     let mut cr = 0.0;
@@ -61,6 +64,11 @@ async fn main() {
     let mut ysel = 0;
     let mut datax = String::new();
     let mut datay = String::new();
+    //saving stuff
+    let mut fx: i32;
+    let mut fy: i32;
+    let mut go =1;
+    let mut savepath = String::new();
 (mousex, mousey) = mouse_position();
 
     //loop (woah no kidding)
@@ -79,6 +87,32 @@ async fn main() {
         draw_rectangle(10., screen_height() - 19., 434., 12., LIGHTGRAY);
         draw_text("By using this software you agree to the terms of this liscense", 10.0, screen_height() - 10.0, 16.0, BLACK);
 
+        //credits button
+        draw_rectangle(10., screen_height() - 35., 50., 13., GRAY);
+        draw_rectangle(10., screen_height() - 35., 50., 12., LIGHTGRAY);
+        draw_text("Credits", 10.0, screen_height() - 26.0, 16.0, BLACK);
+        //credits hitbox and function
+        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 0. && mousex <= 50.) && (mousey >= screen_height() - 35. && mousey <= screen_height() - 26.){
+            credit = 1;
+            println!("credits pressed!");
+            while(credit == 1){
+            (mousex, mousey) = mouse_position();//get mouse position
+
+            clear_background(WHITE); //clear
+            //logo & text
+            draw_texture(&logo, 0., -30., WHITE);
+            draw_text("M.I.C.A Milorad Image Creation Application.", 10.0, 140.0, 20.0, BLACK);
+            draw_multiline_text("M.I.C.A. in rust \nCode by:\n Squirrel\nUi and icons:\n Squirrel\n\nM.I.C.A. in gamemaker (now deprecated):\nGamemaker code by:\n  Mepm\nGamemaker icons:\n Mepm and Squirrel", 20.0, 200.0, 20.0, Some(1.0), BLACK);
+            //back button
+            draw_rectangle(10., 530., 31., 11., GRAY);
+            draw_rectangle(10., 530., 30., 10., LIGHTGRAY);
+            draw_text("BACK", 10.0, 539.0, 16.0, BLACK);
+
+            next_frame().await; //RENDER IT!
+            //check if you pressed back
+            if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 10. && mousex <= 80.) && (mousey >= 530. && mousey <= 550.){credit = 0;}
+            }
+        }
 
         //checks if you pressed image editor
         if is_mouse_button_pressed(MouseButton::Left) && (mousex >= (screen_width()/2. - 150.) && mousex <= (screen_width()/2. + 150.)) && (mousey >= (screen_height()/2.) && mousey <= (screen_height()/2. + 100.)){
@@ -172,7 +206,7 @@ async fn main() {
             let mut h = 5 as usize;
             if(datax == ""){
                 h = screen_height() as usize;
-                w = screen_width() as usize;
+                w = (screen_width() - 32.) as usize;
             }else{
             let wint: f32 = datax.parse().unwrap();
             let hint: f32 = datay.parse().unwrap();
@@ -181,6 +215,8 @@ async fn main() {
             }
             let mut image = Image::gen_image_color(w as u16, h as u16, WHITE);
             let image2 = Texture2D::from_image(&image);
+            let mut flip = Image::gen_image_color(w as u16, h as u16, WHITE);
+            let flip2 = Texture2D::from_image(&image);
             loop{
                 mousx = mousex;
                 mousy = mousey;
@@ -277,8 +313,82 @@ async fn main() {
                 draw_texture(&paint, 0., 0., WHITE);
                 draw_texture(&rubber, 0., 32., WHITE);
                 draw_texture(&colsel, 0., 64., WHITE);
+                draw_texture(&save, 0., 96., WHITE);
+
+                if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 0. && mousex <= 32.) && (mousey >= 96. && mousey <= 128.){
 
 
+
+                    xsel = 1;
+                    while(xsel == 1){
+                        (mousex, mousey) = mouse_position();//get mouse position
+                        clear_background(WHITE);
+                        draw_text("Input file path eg. /home/user/Pictures/savefile.png", 10.0, 60.0, 16.0, BLACK);
+                        draw_rectangle(550., 19., 21., 13., GRAY);
+                        draw_rectangle(550., 19., 20., 12., LIGHTGRAY);
+                        draw_text("OK", 550.0, 30.0, 16.0, BLACK);
+                        //text input
+                        let window_id = hash!();
+                        root_ui().window(
+                            window_id,
+                            vec2(0.0, EDITOR_TOP_MARGIN),
+                                         vec2(500.0, EDITOR_HEIGHT),
+                                         |ui| {
+                                             let input_text_id = hash!();
+                                             InputText::new(input_text_id)
+                                             .label("")
+                                             .size(vec2(496.0, EDITOR_HEIGHT - 4.0))
+                                             .ui(ui, &mut savepath);
+
+                                         },
+
+                        );
+
+                        if is_key_pressed(KeyCode::Enter){
+                            println!("ok you pressed it!");
+                            xsel = 0;
+                            draw_text("Saving", 10.0, 90.0, 16.0, BLACK);
+                            if(savepath == ""){
+                                draw_text("No Path", 80.0, 60.0, 64.0, BLACK);
+                            }
+                        }
+                        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 550. && mousex <= 571.) && (mousey >= 19. && mousey <= 32.){
+                            println!("ok you pressed it!");
+                            println!("ok you pressed it!");
+                            xsel = 0;
+                            draw_text("Saving", 10.0, 90.0, 16.0, BLACK);
+                            if(savepath == ""){
+                                draw_text("No Path", 60.0, 60.0, 64.0, BLACK);
+                            }
+                        }
+                        next_frame().await; //RENDER IT!
+                    }
+
+
+
+
+                    x = 0.0;
+                    y = 1.0;
+                    fx = 0;
+                    fy = h as i32 -2;
+                    while go == 1{
+                        x += 1.0;
+                        fx += 1;
+                        flipcol = image.get_pixel(x as u32 ,y as u32);
+                        flip.set_pixel(fx as u32 , fy as u32, flipcol);
+                        if(fx == w as i32 -1){
+                            x = 0.0;
+                            fx = 0;
+                            fy -= 1;
+                            y += 1.0;
+                            if y == h as f32 {
+                                go =0;
+                            }
+                        }
+
+                    }
+                    (&flip).export_png(&savepath);
+                }
                 //colour swatch
                 if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 0. && mousex <= 32.) && (mousey >= 64. && mousey <= 96.){
                     println!("you pressed it!"); state = 1;
@@ -444,7 +554,7 @@ async fn main() {
 
 
         //liscense button
-        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 10. && mousex <= 507.) && (mousey >= screen_height() -30. && mousey <= screen_height()){
+        if is_mouse_button_pressed(MouseButton::Left) && (mousex >= 10. && mousex <= 507.) && (mousey >= screen_height() -23. && mousey <= screen_height()){
             println!("UWU~");//epic debug text
             liscense = 1; //sets to check if you are still looking
             while(liscense == 1){
